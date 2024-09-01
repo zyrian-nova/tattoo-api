@@ -1,12 +1,12 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
+import { UsersController } from "./controllers/usersController";
 
 export class AppRoutes {
     static get routes(): Router {
         const router = Router();
-        
-        router.get('/api/users', (req: Request, res: Response) => {
-            return res.status(200).json({ message: 'OK'})
-        })
+        const usersController = new UsersController();
+
+        router.get('/api/users', usersController.getUsers)
 
         return router;
     }
