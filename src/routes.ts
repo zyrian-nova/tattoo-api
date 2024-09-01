@@ -6,7 +6,12 @@ export class AppRoutes {
         const router = Router();
         const usersController = new UsersController();
 
-        router.get('/api/users', usersController.getUsers)
+        router.get('/api/users', usersController.getUsers);
+        router.get('/api/user/:id', usersController.getUsersById);
+        router.get('/api/user/email/:email', usersController.getUsersByEmail);
+        router.post('/api/user/create', usersController.createUser);
+        router.put('/api/user/:id', usersController.updateUser);
+        router.delete('/api/user/:id', usersController.deleteUser);
 
         return router;
     }
