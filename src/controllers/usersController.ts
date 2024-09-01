@@ -128,8 +128,116 @@ export class UsersController {
             return res.status(201).json({ message: `User was created: ${answer.rows[0]}`});
         } catch (error) {
             console.log('User could not be created', error);
-            return res.status(500).json({ error: `Error creating user: ${error}`})
+            return res.status(500).json({ error: `Error creating user: ${error}`});
+        }
+    }
+
+    public updateUser = async (req: Request, res: Response) => {
+        const id = req.params.id;
+        const { name, email, password, avatar, role_id } = req.body;
+
+        // Validation: ID is not empty
+        if (!id) return res.status(400).json({ error: `Bad request: id is required` });
+        
+        // Validation: ID as number
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({ error: 'Invalid user ID' });
         }
 
+        // Fields to update (construction)
+        const fields: string[] = [];
+        const values: any[] = [];
+        let counter = 1;
+
+        // Validation & dynamic consult construction 
+        if (name) {
+            fields.push(`name = $${counter++}`);
+            values.push(name);
+        }
+
+        // Validation: EMAIL format
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({ error: 'Invalid email format' });
+            }
+            fields.push(`email = $${counter++}`);
+            values.push(email);
+        }
+
+        // Validation: PASSWORD without hashing
+        if (password) {
+            fields.push(`password = $${counter++}`);
+            values.push(password);
+
+            // Validation: PASSWORD hashed
+            // if (password) {
+            //     const hashedPassword = await bcrypt.hash(password, 10);
+            //     fields.push(`password = $${counter++}`);
+            //     values.push(hashedPassword);
+            // }
+
+            // Validation: AVATAR it's a valid image 
+            if (avatar) {
+                const avatarRegex = /\.(jpg|jpeg|png|webp)$/i;
+                if (!avatarRegex.test(avatar)) {
+                    return res.status(400).json({ error: 'Invalid avatar format. Must be .jpg, .jpeg, .png, or .webp' });
+                }
+                fields.push(`avatar = $${counter++}`);
+                values.push(avatar);
+            }
+
+            // Validation: user must have a ROLE ID
+            if (role_id) {
+                if (!Number.isInteger(role_id)) {
+                    return res.status(400).json({ error: 'Invalid role_id' });
+                }
+                fields.push(`role_id = $${counter++}`);
+                values.push(role_id);
+            }
+            // Validate: ROLE ID must be validated with existing roles
+
+            // Validation: Fields have information
+            if (fields.length === 0) {
+                return res.status(400).json({ error: 'No fields to update' });
+            }
+
+
+            const query = `UPDATE users SET ${fields.join(', ')} WHERE id = $${counter} RETURNING *`;
+            values.push(id);
+
+            try {
+                const answer = await this.pool.query(query, values);
+                if (answer.rows.length === 0) {
+                    return res.status(404).json({ message: `User not found: ${id}` });
+                }
+                return res.status(201).json({ message: `User was updated: ${answer.rows[0]}`});
+            } catch (error) {
+                console.error('Error updating user:', error);
+                return res.status(500).json({ message: `Error updating user: ${error}` });
+            }
+        }
+    }
+
+    public deleteUser = async (req: Request, res: Response) => {
+        const id = req.params.id;
+        const { name, email, password, avatar, role_id } = req.body;
+
+        // Validation: ID is not empty
+        if (!id) return res.status(400).json({ error: `Bad request: id is required` });
+
+        try {
+            const answer = await this.pool.query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
+
+            // Validation: ID database returned empty value
+            if (answer.rows.length === 0) {
+                return res.status(404).json({ message: `User not found: ${id}` });
+            }
+
+            return res.status(200).json({ message: `User deleted successfully: ${answer.rows[0]}` })
+        } catch (error) {
+            console.error('Error updating user:', error);
+            return res.status(500).json({ message: `Error deleting user: ${error}` });
+        }
     }
 }
