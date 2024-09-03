@@ -10,7 +10,7 @@ export class AppRoutes {
         router.get('/api/user/:id', usersController.getUsersById);
         router.get('/api/user/email/:email', usersController.getUsersByEmail);
         router.post('/api/user/create', usersController.createUser);
-        router.put('/api/user/:id', usersController.updateUser);
+        router.put('/api/user/edit/:id', usersController.updateUser);
         router.delete('/api/user/:id', usersController.deleteUser);
 
         return router;
