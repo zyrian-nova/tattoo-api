@@ -10,6 +10,7 @@ import { Server } from "./server";
 function main() {
     const server = new Server({
         port: envs.PORT,
+        host: envs.HOST,
         routes: AppRoutes.routes,
     })
 
