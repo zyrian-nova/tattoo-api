@@ -9,12 +9,14 @@ interface Options {
 export class Server {
     private app = express();
     private readonly port: number;
+    private readonly host: string;
     private readonly routes: Router;
 
     constructor(options: Options) {
-        const { port, routes } = options;
+        const { port, routes, host } = options;
 
         this.port = port;
+        this.host = host;
         this.routes = routes;
     }
 
