@@ -22,7 +22,7 @@ export class UsersController {
             console.log(answer);
         } catch (error) {
             console.log(error);
-            return res.status(500).json({ error: `Error obtaining users: ${error}`})
+            return res.status(500).json({ message: `Error obtaining users: ${error}`})
         }
     }
 
@@ -31,11 +31,11 @@ export class UsersController {
         const id = req.params.id;
 
         // Validation: ID is not empty
-        if (!id) return res.status(400).json({ error: `Bad request: id is required` });
+        if (!id) return res.status(400).json({ message: `Bad request: id is required` });
         
         // Validation: ID is a number
         if (isNaN(Number(id))) {
-            return res.status(400).json({ error: `Bad request: id must be a number` });
+            return res.status(400).json({ message: `Bad request: id must be a number` });
         }
 
         try {
@@ -44,13 +44,13 @@ export class UsersController {
 
             // Validation: ID value is more than 0
             if (answer.rows.length === 0) {
-                return res.status(404).json({ error: 'User not found' });
+                return res.status(404).json({ message: 'Error: user not found' });
             }
 
             return res.status(200).json(answer.rows[0]);
         } catch (error) {
             console.log('Error fetching user:', error);
-            return res.status(500).json({ error: `Error retrieving user: ${error}` });
+            return res.status(500).json({ message: `Error retrieving user id ${id}: ${error}` });
         }
     } 
 
@@ -59,17 +59,17 @@ export class UsersController {
         const email = req.params.email;
                 
         // Validation: EMAIL is not empty
-        if (!email) return res.status(400).json({ error: `Bad request: email is required` });
+        if (!email) return res.status(400).json({ message: `Bad request: email is required` });
         
         // Validation: EMAIL has the correct format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: `Invalid email format` });
+            return res.status(400).json({ message: `Bad request: invalid email format` });
         }
 
         // Validation: EMAIL doesn't exceed VALUE (254 by RFC 5321) characters
         if (email.length > 254) {
-            return res.status(400).json({ error: `Email is too long` });
+            return res.status(400).json({ message: `Bad request: email is too long` });
         }
 
         try {
@@ -78,13 +78,13 @@ export class UsersController {
 
             // Validation: ID value is more than 0
             if (answer.rows.length === 0) {
-                return res.status(404).json({ error: `User not found` });
+                return res.status(404).json({ message: `Error: User not found` });
             }
 
             return res.status(200).json(answer.rows[0])
         } catch (error) {
             console.log('Error fetching user:', error);
-            return res.status(500).json({ error: `Error retrieving user: ${error}` });
+            return res.status(500).json({ message: `Error retrieving user email ${email}: ${error}` });
         }
     }
 
@@ -93,18 +93,18 @@ export class UsersController {
 
         // Validation: NAME
         if (!name || typeof name !== 'string') {
-            return res.status(400).json({ error: `Invalid name` });
+            return res.status(400).json({ message: `Error: Invalid characters in name` });
         }
 
         // Validation: EMAIL has the correct format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
         if (!email || !emailRegex.test(email)) {
-            return res.status(400).json({ error: `Invalid email format` });
+            return res.status(400).json({ message: `Error: Invalid email format` });
         }
 
         // Validation: PASSWORD it's not empty and it's a string
         if (!password || typeof password !== 'string') {
-            return res.status(400).json({ error: `Invalid password` });
+            return res.status(400).json({ message: `Error: Invalid password` });
         }
         // HASHING the PASSWORD (npm install bcrypt)
         // const hashedPassword = await bcrypt.hash(password, 10);
@@ -112,23 +112,23 @@ export class UsersController {
         // Validation: AVATAR must be one of the following formats
         const avatarRegex = /\.(jpg|jpeg|png|webp)$/i;
         if (!avatar || !avatarRegex.test(avatar)) {
-            return res.status(400).json({ error: `Invalid avatar format. Must be .jpg, .jpeg, .png, or .webp` });
+            return res.status(400).json({ message: `Error: Invalid avatar format. Must be .jpg, .jpeg, .png, or .webp` });
         }
         // Validation: AVATAR file size must be limited
 
         // Validation: user must have a ROLE ID
         if (!role_id || !Number.isInteger(role_id)) {
-            return res.status(400).json({ error: `Invalid role_id` });
+            return res.status(400).json({ message: `Error: Invalid role_id` });
         }
         // Validate: ROLE ID must be validated with existing roles
 
         try {
             const answer = await this.pool.query('INSERT INTO users (name, email, password, avatar, role_id) VALUES ($1, $2, $3, $4, $5) RETURNING *', [name, email, password, avatar, role_id]);
 
-            return res.status(201).json({ message: `User was created: ${answer.rows[0]}`});
+            return res.status(201).json({ message: `User was created: ${name}`});
         } catch (error) {
             console.log('User could not be created', error);
-            return res.status(500).json({ error: `Error creating user: ${error}`});
+            return res.status(500).json({ message: `Error creating user: ${error}`});
         }
     }
 
@@ -137,11 +137,11 @@ export class UsersController {
         const { name, email, password, avatar, role_id } = req.body;
 
         // Validation: ID is not empty
-        if (!id) return res.status(400).json({ error: `Bad request: id is required` });
+        if (!id) return res.status(400).json({ message: `Bad request: id is required` });
         
         // Validation: ID as number
         if (!id || isNaN(Number(id))) {
-            return res.status(400).json({ error: 'Invalid user ID' });
+            return res.status(400).json({ message: 'Error: invalid user id' });
         }
 
         // Fields to update (construction)
@@ -159,7 +159,7 @@ export class UsersController {
         if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/;
             if (!emailRegex.test(email)) {
-                return res.status(400).json({ error: 'Invalid email format' });
+                return res.status(400).json({ message: 'Error: invalid email format' });
             }
             fields.push(`email = $${counter++}`);
             values.push(email);
@@ -181,7 +181,7 @@ export class UsersController {
             if (avatar) {
                 const avatarRegex = /\.(jpg|jpeg|png|webp)$/i;
                 if (!avatarRegex.test(avatar)) {
-                    return res.status(400).json({ error: 'Invalid avatar format. Must be .jpg, .jpeg, .png, or .webp' });
+                    return res.status(400).json({ message: 'Error: invalid avatar format. Must be .jpg, .jpeg, .png, or .webp' });
                 }
                 fields.push(`avatar = $${counter++}`);
                 values.push(avatar);
@@ -190,7 +190,7 @@ export class UsersController {
             // Validation: user must have a ROLE ID
             if (role_id) {
                 if (!Number.isInteger(role_id)) {
-                    return res.status(400).json({ error: 'Invalid role_id' });
+                    return res.status(400).json({ message: 'Error: invalid role_id' });
                 }
                 fields.push(`role_id = $${counter++}`);
                 values.push(role_id);
@@ -199,7 +199,7 @@ export class UsersController {
 
             // Validation: Fields have information
             if (fields.length === 0) {
-                return res.status(400).json({ error: 'No fields to update' });
+                return res.status(400).json({ message: 'No fields to update' });
             }
 
 
@@ -209,12 +209,12 @@ export class UsersController {
             try {
                 const answer = await this.pool.query(query, values);
                 if (answer.rows.length === 0) {
-                    return res.status(404).json({ message: `User not found: ${id}` });
+                    return res.status(404).json({ message: `Error: user ${id} not found` });
                 }
-                return res.status(201).json({ message: `User was updated: ${answer.rows[0]}`});
+                return res.status(201).json({ message: `User ${id} was updated`});
             } catch (error) {
                 console.error('Error updating user:', error);
-                return res.status(500).json({ message: `Error updating user: ${error}` });
+                return res.status(500).json({ message: `Error updating user ${id}: ${error}` });
             }
         }
     }
@@ -224,20 +224,20 @@ export class UsersController {
         const { name, email, password, avatar, role_id } = req.body;
 
         // Validation: ID is not empty
-        if (!id) return res.status(400).json({ error: `Bad request: id is required` });
+        if (!id) return res.status(400).json({ message: `Bad request: id is required` });
 
         try {
             const answer = await this.pool.query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
 
             // Validation: ID database returned empty value
             if (answer.rows.length === 0) {
-                return res.status(404).json({ message: `User not found: ${id}` });
+                return res.status(404).json({ message: `Error: user id ${id} not found` });
             }
 
-            return res.status(200).json({ message: `User deleted successfully: ${answer.rows[0]}` })
+            return res.status(200).json({ message: `User id ${id} deleted successfully` })
         } catch (error) {
-            console.error('Error updating user:', error);
-            return res.status(500).json({ message: `Error deleting user: ${error}` });
+            console.error('Error deleting user:', error);
+            return res.status(500).json({ message: `Error deleting user id ${id} : ${error}` });
         }
     }
 }
